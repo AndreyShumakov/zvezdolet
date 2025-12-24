@@ -310,7 +310,17 @@ const Game = {
         this.state.activeFeatures.forEach(feature => {
             const type = feature.isBroken ? 'broken' : 'feature';
             const miniCard = CardsManager.createMiniCard(feature, type);
-            miniCard.addEventListener('click', () => this.showCardModal(feature, 'feature'));
+// Для сломанной фичи открываем карточку сбоя
+            if (feature.isBroken) {
+                const crash = CardsManager.getCrashForFeature(feature.id);
+                if (crash) {
+                    miniCard.addEventListener('click', () => this.showCardModal(crash, 'defect'));
+                } else {
+                    miniCard.addEventListener('click', () => this.showCardModal(feature, 'feature'));
+                }
+            } else {
+                miniCard.addEventListener('click', () => this.showCardModal(feature, 'feature'));
+            }
             this.elements.activeUpgrades.appendChild(miniCard);
         });
 
