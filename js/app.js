@@ -88,6 +88,8 @@ const Game = {
             phases: document.querySelectorAll('.phase'),
             dice1: document.getElementById('dice-1'),
             dice2: document.getElementById('dice-2'),
+            diceCube1: document.querySelector('#dice-1 .dice-cube'),
+            diceCube2: document.querySelector('#dice-2 .dice-cube'),
             diceTotal: document.getElementById('dice-total'),
             rollDiceBtn: document.getElementById('roll-dice'),
             currentPlayerName: document.getElementById('current-player-name'),
@@ -290,11 +292,15 @@ const Game = {
             phase.classList.toggle('active', phase.dataset.phase === this.state.currentPhase);
         });
 
-        // Кубики
-        this.elements.dice1.textContent = this.state.diceRoll[0] || '?';
-        this.elements.dice2.textContent = this.state.diceRoll[1] || '?';
+        // Кубики (3D)
+        if (this.state.diceRoll[0]) {
+            this.elements.diceCube1.setAttribute('data-value', this.state.diceRoll[0]);
+        }
+        if (this.state.diceRoll[1]) {
+            this.elements.diceCube2.setAttribute('data-value', this.state.diceRoll[1]);
+        }
         const total = this.state.diceRoll[0] + this.state.diceRoll[1];
-        this.elements.diceTotal.textContent = total || '?';
+        this.elements.diceTotal.innerHTML = total ? `<span>${total}</span>` : '<span>?</span>';
 
         // Кнопки
         const isLastTurn = this.state.currentTurn >= this.state.maxTurns;
@@ -406,20 +412,45 @@ const Game = {
         if (this.state.isGameOver) return;
         if (this.state.currentPhase !== 'dice_roll') return;
 
-        this.elements.dice1.classList.add('rolling');
-        this.elements.dice2.classList.add('rolling');
+        // Блокируем повторный бросок
+        this.elements.rollDiceBtn.disabled = true;
 
+        // Сбрасываем предыдущее значение и запускаем вращение
+        this.elements.diceCube1.removeAttribute('data-value');
+        this.elements.diceCube2.removeAttribute('data-value');
+        this.elements.diceCube1.classList.add('rolling');
+        this.elements.diceCube2.classList.add('rolling');
+        this.elements.diceTotal.innerHTML = '<span>?</span>';
+
+        // Анимация вращения 800мс
         setTimeout(() => {
             this.state.diceRoll = [
                 Math.floor(Math.random() * 6) + 1,
                 Math.floor(Math.random() * 6) + 1
             ];
 
-            this.elements.dice1.classList.remove('rolling');
-            this.elements.dice2.classList.remove('rolling');
+            // Убираем вращение
+            this.elements.diceCube1.classList.remove('rolling');
+            this.elements.diceCube2.classList.remove('rolling');
+
+            // Устанавливаем значения (CSS повернёт кубик на нужную грань)
+            this.elements.diceCube1.setAttribute('data-value', this.state.diceRoll[0]);
+            this.elements.diceCube2.setAttribute('data-value', this.state.diceRoll[1]);
+
+            // Эффект приземления
+            this.elements.dice1.classList.add('landed');
+            this.elements.dice2.classList.add('landed');
+
+            setTimeout(() => {
+                this.elements.dice1.classList.remove('landed');
+                this.elements.dice2.classList.remove('landed');
+            }, 300);
 
             const total = this.state.diceRoll[0] + this.state.diceRoll[1];
             const isDubble = this.state.diceRoll[0] === this.state.diceRoll[1];
+
+            // Обновляем сумму
+            this.elements.diceTotal.innerHTML = `<span>${total}</span>`;
 
             this.addLog(`🎲 Бросок: ${this.state.diceRoll[0]} + ${this.state.diceRoll[1]} = ${total}${isDubble ? ' (дубль!)' : ''}`);
 
@@ -433,7 +464,7 @@ const Game = {
 
             this.state.currentPhase = 'results';
             this.updateUI();
-        }, 500);
+        }, 800);
     },
 
     /**
