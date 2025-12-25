@@ -270,11 +270,29 @@ const CardsManager = {
     },
 
     /**
+     * Определение уровня критичности по шаблону
+     */
+    getLevelFromTemplate(template) {
+        if (!template) return 'normal';
+
+        // Дефекты и сбои
+        if (template.includes('EASY') || template.includes('STABLE')) return 'easy';
+        if (template.includes('MEDIUM') || template.includes('NORMAL')) return 'medium';
+        if (template.includes('HARD') || template.includes('UNSTABLE')) return 'hard';
+        if (template.includes('EXTREME') || template.includes('RISKY')) return 'extreme';
+        if (template.includes('SPECIAL')) return 'special';
+        if (template.includes('JOKER')) return 'joker';
+
+        return 'normal';
+    },
+
+    /**
      * Создание мини-карточки для игрового интерфейса
      */
     createMiniCard(card, type) {
         const div = document.createElement('div');
-        div.className = `mini-card ${type}`;
+        const level = this.getLevelFromTemplate(card.template);
+        div.className = `mini-card ${type} level-${level}`;
         div.dataset.id = card.id;
         div.dataset.type = type;
 
@@ -286,27 +304,30 @@ const CardsManager = {
         const cardType = card.id.charAt(0);
         let typeLabel = '';
         let costLabel = '';
-        let triggerInfo = '';
+        let triggerPositive = '';  // Положительное событие (прибыль)
+        let triggerNegative = '';  // Отрицательное событие (потеря/поломка)
 
         switch (cardType) {
             case 'D': // Дефект
                 typeLabel = 'ДЕФЕКТ';
-                triggerInfo = card.diceLoss ? `🎲 ${card.diceLoss}` : '';
+                triggerNegative = card.diceLoss ? `💥 ${card.diceLoss}` : '';
                 costLabel = card.cost || '';
                 break;
             case 'F': // Фича/Улучшение
                 typeLabel = card.isBroken ? '⚠️ СБОЙ' : 'ФИЧА';
                 if (card.isBroken) {
-                    triggerInfo = card.diceLoss ? `🎲 ${card.diceLoss}` : '';
+                    triggerNegative = card.diceLoss ? `💥 ${card.diceLoss}` : '';
                     costLabel = card.cost || '';
                 } else {
-                    triggerInfo = card.diceProfit ? `💰 ${card.diceProfit}` : '';
+                    // Показываем оба значения для фичи
+                    triggerPositive = card.diceProfit ? `💰 ${card.diceProfit}` : '';
+                    triggerNegative = card.diceLoss ? `💥 ${card.diceLoss}` : '';
                     costLabel = card.profit ? `${card.profit}` : card.cost;
                 }
                 break;
             case 'C': // Сбой
                 typeLabel = 'СБОЙ';
-                triggerInfo = card.diceLoss ? `🎲 ${card.diceLoss}` : '';
+                triggerNegative = card.diceLoss ? `💥 ${card.diceLoss}` : '';
                 costLabel = card.cost || '';
                 break;
             case 'J': // Джокер
@@ -315,11 +336,24 @@ const CardsManager = {
                 break;
         }
 
+        // Формируем блок триггеров
+        let triggersHtml = '';
+        if (triggerPositive || triggerNegative) {
+            triggersHtml = '<div class="mini-card-triggers">';
+            if (triggerPositive) {
+                triggersHtml += `<div class="mini-card-trigger positive">${triggerPositive}</div>`;
+            }
+            if (triggerNegative) {
+                triggersHtml += `<div class="mini-card-trigger negative">${triggerNegative}</div>`;
+            }
+            triggersHtml += '</div>';
+        }
+
         div.innerHTML = `
             <div class="mini-card-type">${typeLabel}</div>
             <div class="mini-card-id">${card.id}</div>
             <div class="mini-card-name">${card.header}</div>
-            ${triggerInfo ? `<div class="mini-card-trigger">${triggerInfo}</div>` : ''}
+            ${triggersHtml}
             <div class="mini-card-cost">${costLabel}</div>
         `;
 

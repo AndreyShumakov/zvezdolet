@@ -20,6 +20,9 @@ const Game = {
         availableFeatures: [],    // Доступные для покупки фичи
         playerJokers: [],
         usedJokerIds: [],
+        usedDefectIds: [],        // ID использованных дефектов
+        shownFeatureIds: [],      // ID фичей, которые уже выпадали в текущей "эпохе"
+        jokersGiven: false,       // Были ли выданы джокеры на 10-м ходу
         isGameOver: false,
         triggeredEvents: [],
         noProfitThisTurn: false,   // Флаг "Ход без прибыли"
@@ -161,18 +164,23 @@ const Game = {
             if (e.target === this.elements.modal) this.closeModal();
         });
 
-        // Клики по заголовкам секций
-        this.elements.defectsSection?.querySelector('h3')?.addEventListener('click', () => {
+        // Клики по секциям (вся область, кроме мини-карточек)
+        this.elements.defectsSection?.addEventListener('click', (e) => {
+            // Игнорируем клики на мини-карточках (у них свой обработчик)
+            if (e.target.closest('.mini-card')) return;
             const allDefectsAndCrashes = [...this.state.activeDefects, ...this.state.activeCrashes];
             this.openSectionModal('defects', 'Активные дефекты и сбои', allDefectsAndCrashes);
         });
-        this.elements.upgradesSection?.querySelector('h3')?.addEventListener('click', () => {
+        this.elements.upgradesSection?.addEventListener('click', (e) => {
+            if (e.target.closest('.mini-card')) return;
             this.openSectionModal('features', 'Установленные фичи', this.state.activeFeatures);
         });
-        this.elements.availableSection?.querySelector('h3')?.addEventListener('click', () => {
+        this.elements.availableSection?.addEventListener('click', (e) => {
+            if (e.target.closest('.mini-card')) return;
             this.openSectionModal('available', 'Доступные фичи', this.state.availableFeatures);
         });
-        this.elements.jokersSection?.querySelector('h3')?.addEventListener('click', () => {
+        this.elements.jokersSection?.addEventListener('click', (e) => {
+            if (e.target.closest('.mini-card')) return;
             this.openSectionModal('jokers', 'Джокеры', this.state.playerJokers);
         });
 
@@ -235,15 +243,24 @@ const Game = {
         this.state.isGameOver = false;
         this.state.playerJokers = [];
         this.state.usedJokerIds = [];
+        this.state.usedDefectIds = [];
+        this.state.shownFeatureIds = [];
+        this.state.jokersGiven = false;
         this.state.triggeredEvents = [];
         this.state.noProfitThisTurn = false;
 
         // Начальные карточки
         this.state.activeDefects = CardsManager.getRandomDefects(1);
-        this.state.activeDefects.forEach(d => d.isActive = true);
+        this.state.activeDefects.forEach(d => {
+            d.isActive = true;
+            this.state.usedDefectIds.push(d.id);
+        });
         this.state.activeFeatures = [];
         this.state.activeCrashes = [];
+
+        // Начальные доступные фичи
         this.state.availableFeatures = CardsManager.getRandomFeatures(3);
+        this.state.availableFeatures.forEach(f => this.state.shownFeatureIds.push(f.id));
 
         this.updateUI();
 
@@ -280,7 +297,15 @@ const Game = {
         this.elements.diceTotal.textContent = total || '?';
 
         // Кнопки
-        if (this.state.currentPhase === 'planning') {
+        const isLastTurn = this.state.currentTurn >= this.state.maxTurns;
+        const isGameOver = this.state.isGameOver;
+
+        // Если игра окончена - блокируем все кнопки
+        if (isGameOver) {
+            this.elements.rollDiceBtn.disabled = true;
+            this.elements.endTurnBtn.disabled = true;
+            this.elements.endTurnBtn.textContent = '🏁 Игра завершена';
+        } else if (this.state.currentPhase === 'planning') {
             this.elements.rollDiceBtn.disabled = true;
             this.elements.endTurnBtn.disabled = false;
             this.elements.endTurnBtn.textContent = 'Проверить состояние корабля 🚀';
@@ -291,7 +316,10 @@ const Game = {
         } else if (this.state.currentPhase === 'results') {
             this.elements.rollDiceBtn.disabled = true;
             this.elements.endTurnBtn.disabled = false;
-            this.elements.endTurnBtn.textContent = 'Следующий ход →';
+            // На последнем ходу показываем кнопку завершения
+            this.elements.endTurnBtn.textContent = isLastTurn
+                ? '🏁 Завершить миссию'
+                : 'Следующий ход →';
         }
 
         this.renderCards();
@@ -351,12 +379,20 @@ const Game = {
      * Завершить фазу / ход
      */
     endTurn() {
+        // Блокируем действия если игра окончена
+        if (this.state.isGameOver) return;
+
         switch (this.state.currentPhase) {
             case 'planning':
                 this.state.currentPhase = 'dice_roll';
                 this.addLog('🎲 Бросьте кубики!');
                 break;
             case 'results':
+                // На последнем ходу сразу завершаем игру
+                if (this.state.currentTurn >= this.state.maxTurns) {
+                    this.endGame();
+                    return;
+                }
                 this.nextTurn();
                 break;
         }
@@ -367,6 +403,7 @@ const Game = {
      * Бросок кубиков
      */
     rollDice() {
+        if (this.state.isGameOver) return;
         if (this.state.currentPhase !== 'dice_roll') return;
 
         this.elements.dice1.classList.add('rolling');
@@ -409,44 +446,42 @@ const Game = {
 
                 // Специальные эффекты
                 if (defect.loss.includes('ОД')) {
-                    this.state.actionPoints = Math.max(0, this.state.actionPoints - loss);
                     this.state.triggeredEvents.push({
                         type: 'defect',
                         name: defect.header,
-                        message: defect.loss
+                        message: defect.loss,
+                        pointsChange: 0,
+                        actionPointsChange: -loss
                     });
-                    this.addLog(`⚠️ "${defect.header}": ${defect.loss}`, 'danger');
                 } else if (defect.loss.includes('ОМ')) {
-                    this.state.missionPoints -= loss;
                     this.state.triggeredEvents.push({
                         type: 'defect',
                         name: defect.header,
-                        message: defect.loss
+                        message: defect.loss,
+                        pointsChange: -loss
                     });
-                    this.addLog(`⚠️ "${defect.header}": ${defect.loss}`, 'danger');
                 } else {
                     // Специальные эффекты
+                    let pointsChange = 0;
+                    let special = null;
+
+                    if (defect.loss === 'Конец игры') {
+                        special = 'end_game';
+                    } else if (defect.loss === 'Ход без прибыли') {
+                        special = 'no_profit';
+                    } else if (defect.loss === 'Минус фича') {
+                        special = 'lose_feature';
+                    } else if (defect.loss === 'Пропуск хода') {
+                        special = 'skip_turn';
+                    }
+
                     this.state.triggeredEvents.push({
                         type: 'defect',
                         name: defect.header,
-                        message: defect.loss
+                        message: defect.loss,
+                        pointsChange: pointsChange,
+                        special: special
                     });
-
-                    if (defect.loss === 'Конец игры') {
-                        this.state.missionPoints = 0;
-                        this.addLog(`💀 "${defect.header}": КОНЕЦ ИГРЫ!`, 'danger');
-                    } else if (defect.loss === 'Ход без прибыли') {
-                        this.state.noProfitThisTurn = true;
-                        this.addLog(`⚠️ "${defect.header}": Этот ход без прибыли!`, 'warning');
-                    } else if (defect.loss === 'Минус фича') {
-                        this.removeRandomFeature();
-                        this.addLog(`⚠️ "${defect.header}": Потеряна фича!`, 'danger');
-                    } else if (defect.loss === 'Пропуск хода') {
-                        this.state.skipNextTurn = true;
-                        this.addLog(`⚠️ "${defect.header}": Следующий ход пропущен!`, 'warning');
-                    } else {
-                        this.addLog(`⚠️ "${defect.header}": ${defect.loss}`, 'warning');
-                    }
                 }
             }
         });
@@ -459,13 +494,12 @@ const Game = {
         this.state.activeCrashes.forEach(crash => {
             if (CardsManager.checkDiceRange(crash.diceLoss, diceSum)) {
                 const loss = CardsManager.parseNumber(crash.loss);
-                this.state.missionPoints -= loss;
                 this.state.triggeredEvents.push({
                     type: 'crash',
                     name: crash.header,
-                    message: crash.loss
+                    message: crash.loss,
+                    pointsChange: -loss
                 });
-                this.addLog(`💥 Сбой "${crash.header}": ${crash.loss}`, 'danger');
             }
         });
     },
@@ -481,13 +515,12 @@ const Game = {
             if (!this.state.noProfitThisTurn && CardsManager.checkDiceRange(feature.diceProfit, diceSum)) {
                 // Для фич прибыль хранится в поле loss (особенность CSV)
                 const profit = CardsManager.parseNumber(feature.loss);
-                this.state.missionPoints += profit;
                 this.state.triggeredEvents.push({
                     type: 'profit',
                     name: feature.header,
-                    message: feature.loss
+                    message: feature.loss,
+                    pointsChange: +profit
                 });
-                this.addLog(`✨ "${feature.header}": ${feature.loss}`, 'success');
             }
 
             // Проверяем поломку
@@ -502,16 +535,16 @@ const Game = {
                     this.state.triggeredEvents.push({
                         type: 'breakdown',
                         name: feature.header,
-                        message: `Сбой: ${crash.header}`
+                        message: `Сбой: ${crash.header}`,
+                        pointsChange: 0
                     });
-                    this.addLog(`💥 "${feature.header}" сломалось! Сбой: ${crash.header}`, 'warning');
                 }
             }
         });
     },
 
     /**
-     * Показать события
+     * Показать события и применить изменения ОМ синхронно
      */
     showTriggeredEvents() {
         const oldNotification = document.querySelector('.event-notification');
@@ -538,14 +571,67 @@ const Game = {
         let delay = 0;
         this.state.triggeredEvents.forEach(event => {
             setTimeout(() => {
+                // Применяем изменение ОМ
+                if (event.pointsChange) {
+                    this.state.missionPoints += event.pointsChange;
+                    this.animateMissionPoints(event.pointsChange);
+                }
+
+                // Применяем изменение ОД
+                if (event.actionPointsChange) {
+                    this.state.actionPoints = Math.max(0, this.state.actionPoints + event.actionPointsChange);
+                }
+
+                // Обрабатываем специальные эффекты
+                if (event.special) {
+                    switch (event.special) {
+                        case 'end_game':
+                            this.state.missionPoints = 0;
+                            this.animateMissionPoints(-999);
+                            break;
+                        case 'no_profit':
+                            this.state.noProfitThisTurn = true;
+                            break;
+                        case 'lose_feature':
+                            this.removeRandomFeature();
+                            break;
+                        case 'skip_turn':
+                            this.state.skipNextTurn = true;
+                            break;
+                    }
+                }
+
+                // Добавляем в лог
+                const logType = event.type === 'profit' ? 'success' :
+                               (event.type === 'breakdown' || event.type === 'crash') ? 'danger' : 'warning';
+                const logIcon = event.type === 'profit' ? '✨' :
+                               event.type === 'breakdown' ? '💥' :
+                               event.type === 'crash' ? '💥' : '⚠️';
+                this.addLog(`${logIcon} "${event.name}": ${event.message}`, logType);
+
+                // Обновляем UI (ОМ, ОД)
+                this.elements.missionPoints.textContent = this.state.missionPoints;
+                this.elements.actionPoints.textContent = this.state.actionPoints;
+
+                // Показываем уведомление
                 const notification = document.createElement('div');
                 notification.className = `event-notification ${event.type}`;
                 const icon = event.type === 'profit' ? '💰' : event.type === 'breakdown' ? '💥' : '⚠️';
+
+                // Показываем изменение очков в уведомлении
+                let pointsIndicator = '';
+                if (event.pointsChange && event.pointsChange !== 0) {
+                    const sign = event.pointsChange > 0 ? '+' : '';
+                    const colorClass = event.pointsChange > 0 ? 'points-up' : 'points-down';
+                    pointsIndicator = `<div class="event-points ${colorClass}">${sign}${event.pointsChange} ОМ</div>`;
+                }
+
                 notification.innerHTML = `
                     <div class="event-notification-content">
                         <div class="event-icon">${icon}</div>
                         <div class="event-title">${event.name}</div>
                         <div class="event-message">${event.message}</div>
+                        ${pointsIndicator}
                     </div>
                 `;
                 this.elements.shipArea.appendChild(notification);
@@ -560,9 +646,41 @@ const Game = {
     },
 
     /**
+     * Анимация изменения ОМ
+     */
+    animateMissionPoints(change) {
+        const element = this.elements.missionPoints;
+        if (!element) return;
+
+        // Добавляем класс анимации
+        element.classList.remove('points-flash-up', 'points-flash-down');
+        void element.offsetWidth; // Форсируем reflow для перезапуска анимации
+
+        if (change > 0) {
+            element.classList.add('points-flash-up');
+        } else {
+            element.classList.add('points-flash-down');
+        }
+
+        // Убираем класс после анимации
+        setTimeout(() => {
+            element.classList.remove('points-flash-up', 'points-flash-down');
+        }, 600);
+    },
+
+    /**
      * Следующий ход
      */
     nextTurn() {
+        // Блокируем если игра окончена
+        if (this.state.isGameOver) return;
+
+        // Проверка на окончание игры (ОМ <= 0)
+        if (this.state.missionPoints <= 0) {
+            this.endGame();
+            return;
+        }
+
         // Обработка "Пропуск хода"
         if (this.state.skipNextTurn) {
             this.state.skipNextTurn = false;
@@ -575,11 +693,6 @@ const Game = {
             this.state.currentPlayerIndex = 0;
             this.state.currentTurn++;
 
-            if (this.state.currentTurn > this.state.maxTurns || this.state.missionPoints <= 0) {
-                this.endGame();
-                return;
-            }
-
             this.addNewEvents();
             this.addLog(`📅 Ход ${this.state.currentTurn}`);
         }
@@ -588,6 +701,7 @@ const Game = {
         this.state.actionPoints = 5;
         this.state.diceRoll = [0, 0];
         this.state.triggeredEvents = [];
+        this.state.noProfitThisTurn = false;
 
         const player = this.state.players[this.state.currentPlayerIndex];
         this.addLog(`👤 ${player.name} берёт управление`);
@@ -599,32 +713,82 @@ const Game = {
      * Добавление новых событий в начале хода
      */
     addNewEvents() {
-        // Новый дефект
-        const existingIds = this.state.activeDefects.map(d => d.id);
-        const newDefects = CardsManager.getRandomDefects(1, existingIds);
+        // Собираем все использованные ID дефектов
+        const allUsedDefectIds = [
+            ...this.state.usedDefectIds,
+            ...this.state.activeDefects.map(d => d.id),
+            ...this.state.activeCrashes.map(c => c.id)
+        ];
+
+        // На 10-м ходу - ТОЛЬКО джокеры (вместо дефектов и улучшений)
+        if (this.state.currentTurn === 10 && !this.state.jokersGiven) {
+            // Очищаем доступные фичи
+            this.state.availableFeatures = [];
+
+            // Выдаём 3 джокера
+            this.addLog(`🎰 Особый ход! Джокеры вместо улучшений!`, 'success');
+            for (let i = 0; i < 3; i++) {
+                const joker = CardsManager.getRandomJoker(this.state.usedJokerIds);
+                if (joker) {
+                    this.state.playerJokers.push(joker);
+                    this.state.usedJokerIds.push(joker.id);
+                    this.addLog(`🌟 Джокер: "${joker.header}"`, 'success');
+                }
+            }
+            this.state.jokersGiven = true;
+            return; // Не добавляем дефекты и фичи на этом ходу
+        }
+
+        // Обычный ход - дефекты и улучшения
+
+        // Новый дефект (исключаем все уже использованные)
+        const newDefects = CardsManager.getRandomDefects(1, allUsedDefectIds);
         if (newDefects.length > 0) {
             newDefects[0].isActive = true;
             this.state.activeDefects.push(newDefects[0]);
+            this.state.usedDefectIds.push(newDefects[0].id);
             this.addLog(`⚡ Новый дефект: "${newDefects[0].header}"`, 'warning');
         }
 
-        // Новые фичи
+        // Очищаем доступные фичи прошлого хода (они возвращаются в колоду)
         this.state.availableFeatures = [];
-        const activeFeatureIds = this.state.activeFeatures.map(f => f.id);
 
-        if (this.state.currentTurn >= 10) {
-            const newFeatures = CardsManager.getRandomFeatures(2, activeFeatureIds);
-            this.state.availableFeatures = newFeatures;
+        // Генерация 3 новых фичей с учётом колоды
+        this.generateNewFeatures(3);
+    },
 
-            const joker = CardsManager.getRandomJoker(this.state.usedJokerIds);
-            if (joker) {
-                this.state.playerJokers.push(joker);
-                this.addLog(`🌟 Джокер: "${joker.header}"`, 'success');
-            }
-        } else {
-            const newFeatures = CardsManager.getRandomFeatures(3, activeFeatureIds);
-            this.state.availableFeatures = newFeatures;
+    /**
+     * Генерация новых фичей с учётом колоды и перетасовки
+     */
+    generateNewFeatures(count) {
+        const newFeatures = [];
+
+        // ID фичей, которые нельзя брать: установленные + уже показанные в этой эпохе
+        const installedIds = this.state.activeFeatures.map(f => f.id);
+        let excludeIds = [...installedIds, ...this.state.shownFeatureIds];
+
+        // Пытаемся набрать нужное количество фичей
+        let available = CardsManager.getRandomFeatures(count, excludeIds);
+        newFeatures.push(...available);
+
+        // Если не хватает карточек - перетасовываем колоду
+        if (newFeatures.length < count) {
+            const remaining = count - newFeatures.length;
+            this.addLog(`🔄 Колода улучшений перетасована!`, 'success');
+
+            // Сбрасываем показанные (кроме установленных и только что добавленных)
+            this.state.shownFeatureIds = [];
+
+            // Исключаем только установленные и уже добавленные в этот ход
+            const newExcludeIds = [...installedIds, ...newFeatures.map(f => f.id)];
+            const moreFeatures = CardsManager.getRandomFeatures(remaining, newExcludeIds);
+            newFeatures.push(...moreFeatures);
         }
+
+        // Добавляем в показанные
+        newFeatures.forEach(f => this.state.shownFeatureIds.push(f.id));
+
+        this.state.availableFeatures = newFeatures;
     },
 
     /**
@@ -856,20 +1020,26 @@ const Game = {
 
         let title, message;
         if (score >= 150) {
-            title = '🏆 Блестящая победа!';
-            message = 'Миссия выполнена идеально!';
-        } else if (score >= 100) {
-            title = '✨ Успешная миссия!';
-            message = 'Хорошая работа, экипаж!';
+            title = '🏆 Легендарная победа!';
+            message = 'Ваша миссия войдёт в историю космических исследований! Корабль вернулся в идеальном состоянии, а команда показала невероятное мастерство управления системами. Центр управления уже планирует вашу следующую экспедицию!';
+        } else if (score >= 120) {
+            title = '✨ Отличный результат!';
+            message = 'Команда продемонстрировала высокий профессионализм. Все системы работают стабильно, миссия завершена с превосходными показателями. Вы заслужили отдых перед следующим полётом!';
+        } else if (score >= 80) {
+            title = '🚀 Миссия выполнена';
+            message = 'Несмотря на некоторые трудности, команда справилась с задачей. Корабль доставлен в целости, хотя некоторые системы требуют ремонта. Хорошая работа!';
         } else if (score >= 50) {
-            title = '😓 Миссия завершена';
-            message = 'С серьёзными потерями...';
+            title = '😓 Едва справились';
+            message = 'Это было непросто. Множество поломок и критических ситуаций едва не сорвали миссию. Команде повезло вернуться живыми. Требуется серьёзный ремонт корабля.';
+        } else if (score >= 20) {
+            title = '⚠️ Катастрофа предотвращена';
+            message = 'Корабль еле держится, системы в критическом состоянии. Вам удалось избежать полного уничтожения, но миссию сложно назвать успешной. Экипаж нуждается в отдыхе и психологической помощи.';
         } else if (score > 0) {
-            title = '⚠️ Критический результат';
-            message = 'Экипаж едва выжил.';
+            title = '💀 На грани провала';
+            message = 'Миссия провалена. Корабль практически разрушен, команда получила серьёзные травмы. Лишь чудом удалось избежать полной катастрофы. Центр управления начинает расследование.';
         } else {
-            title = '💀 Катастрофа';
-            message = 'Корабль потерян.';
+            title = '☠️ Полная катастрофа';
+            message = 'Корабль потерян. Системы вышли из строя, экипаж не смог справиться с накопившимися проблемами. Это был печальный конец экспедиции. Память о храбрых космонавтах будет жить вечно.';
         }
 
         this.elements.gameOverTitle.textContent = title;
