@@ -21,7 +21,9 @@ const Game = {
         playerJokers: [],
         usedJokerIds: [],
         isGameOver: false,
-        triggeredEvents: []
+        triggeredEvents: [],
+        noProfitThisTurn: false,   // Флаг "Ход без прибыли"
+        skipNextTurn: false        // Флаг "Пропуск хода"
     },
 
     // DOM элементы
@@ -41,6 +43,7 @@ const Game = {
 
         this.cacheElements();
         this.bindEvents();
+        this.setPlayerCount(1);  // По умолчанию 1 игрок
         this.showScreen('main-menu');
 
         console.log('✅ Игра инициализирована');
@@ -233,6 +236,7 @@ const Game = {
         this.state.playerJokers = [];
         this.state.usedJokerIds = [];
         this.state.triggeredEvents = [];
+        this.state.noProfitThisTurn = false;
 
         // Начальные карточки
         this.state.activeDefects = CardsManager.getRandomDefects(1);
@@ -421,16 +425,27 @@ const Game = {
                     });
                     this.addLog(`⚠️ "${defect.header}": ${defect.loss}`, 'danger');
                 } else {
-                    // Специальные эффекты (пропуск хода, минус фича, конец игры)
+                    // Специальные эффекты
                     this.state.triggeredEvents.push({
                         type: 'defect',
                         name: defect.header,
                         message: defect.loss
                     });
-                    this.addLog(`⚠️ "${defect.header}": ${defect.loss}`, 'warning');
 
                     if (defect.loss === 'Конец игры') {
                         this.state.missionPoints = 0;
+                        this.addLog(`💀 "${defect.header}": КОНЕЦ ИГРЫ!`, 'danger');
+                    } else if (defect.loss === 'Ход без прибыли') {
+                        this.state.noProfitThisTurn = true;
+                        this.addLog(`⚠️ "${defect.header}": Этот ход без прибыли!`, 'warning');
+                    } else if (defect.loss === 'Минус фича') {
+                        this.removeRandomFeature();
+                        this.addLog(`⚠️ "${defect.header}": Потеряна фича!`, 'danger');
+                    } else if (defect.loss === 'Пропуск хода') {
+                        this.state.skipNextTurn = true;
+                        this.addLog(`⚠️ "${defect.header}": Следующий ход пропущен!`, 'warning');
+                    } else {
+                        this.addLog(`⚠️ "${defect.header}": ${defect.loss}`, 'warning');
                     }
                 }
             }
@@ -462,8 +477,8 @@ const Game = {
         this.state.activeFeatures.forEach(feature => {
             if (feature.isBroken) return;
 
-            // Проверяем прибыль
-            if (CardsManager.checkDiceRange(feature.diceProfit, diceSum)) {
+            // Проверяем прибыль (если не действует "Ход без прибыли")
+            if (!this.state.noProfitThisTurn && CardsManager.checkDiceRange(feature.diceProfit, diceSum)) {
                 // Для фич прибыль хранится в поле loss (особенность CSV)
                 const profit = CardsManager.parseNumber(feature.loss);
                 this.state.missionPoints += profit;
@@ -548,6 +563,12 @@ const Game = {
      * Следующий ход
      */
     nextTurn() {
+        // Обработка "Пропуск хода"
+        if (this.state.skipNextTurn) {
+            this.state.skipNextTurn = false;
+            this.addLog("⏭️ Ход пропущен из-за дефекта!", "warning");
+        }
+
         this.state.currentPlayerIndex++;
 
         if (this.state.currentPlayerIndex >= this.state.players.length) {
