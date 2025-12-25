@@ -464,14 +464,15 @@ const Game = {
 
             // Проверяем прибыль
             if (CardsManager.checkDiceRange(feature.diceProfit, diceSum)) {
-                const profit = CardsManager.parseNumber(feature.profit);
+                // Для фич прибыль хранится в поле loss (особенность CSV)
+                const profit = CardsManager.parseNumber(feature.loss);
                 this.state.missionPoints += profit;
                 this.state.triggeredEvents.push({
                     type: 'profit',
                     name: feature.header,
-                    message: feature.profit
+                    message: feature.loss
                 });
-                this.addLog(`✨ "${feature.header}": ${feature.profit}`, 'success');
+                this.addLog(`✨ "${feature.header}": ${feature.loss}`, 'success');
             }
 
             // Проверяем поломку
