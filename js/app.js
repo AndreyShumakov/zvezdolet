@@ -18,7 +18,8 @@ const Game = {
         activeFeatures: [],       // Установленные фичи
         activeCrashes: [],        // Активные сбои (от сломанных фич)
         availableFeatures: [],    // Доступные для покупки фичи
-        playerJokers: [],
+        availableJokers: [],      // Доступные для взятия джокеры
+        playerJokers: [],         // Джокеры на руках
         usedJokerIds: [],
         usedDefectIds: [],        // ID использованных дефектов
         shownFeatureIds: [],      // ID фичей, которые уже выпадали в текущей "эпохе"
@@ -370,9 +371,19 @@ const Game = {
             this.elements.availableUpgrades.appendChild(miniCard);
         });
 
-        // Джокеры
+        // Джокеры (на руках + доступные для взятия)
         if (this.elements.playerJokers) {
             this.elements.playerJokers.innerHTML = '';
+
+            // Доступные для взятия джокеры
+            this.state.availableJokers.forEach(joker => {
+                const miniCard = CardsManager.createMiniCard(joker, 'available-joker');
+                miniCard.classList.add('available-joker');
+                miniCard.addEventListener('click', () => this.showCardModal(joker, 'available-joker'));
+                this.elements.playerJokers.appendChild(miniCard);
+            });
+
+            // Джокеры на руках
             this.state.playerJokers.forEach(joker => {
                 const miniCard = CardsManager.createMiniCard(joker, 'joker');
                 miniCard.addEventListener('click', () => this.showCardModal(joker, 'joker'));
@@ -472,6 +483,9 @@ const Game = {
      */
     checkDefects(diceSum) {
         this.state.activeDefects.forEach(defect => {
+            // Пропускаем "всегда" - они обрабатываются в начале хода
+            if (defect.diceLoss === 'всегда') return;
+
             if (CardsManager.checkDiceRange(defect.diceLoss, diceSum)) {
                 const loss = CardsManager.parseNumber(defect.loss);
 
@@ -523,6 +537,9 @@ const Game = {
      */
     checkCrashes(diceSum) {
         this.state.activeCrashes.forEach(crash => {
+            // Пропускаем "всегда" - они обрабатываются в начале хода
+            if (crash.diceLoss === 'всегда') return;
+
             if (CardsManager.checkDiceRange(crash.diceLoss, diceSum)) {
                 const loss = CardsManager.parseNumber(crash.loss);
                 this.state.triggeredEvents.push({
@@ -734,10 +751,51 @@ const Game = {
         this.state.triggeredEvents = [];
         this.state.noProfitThisTurn = false;
 
+        // Применяем постоянные эффекты (дефекты/сбои с "всегда") в начале хода
+        this.applyPermanentEffects();
+
         const player = this.state.players[this.state.currentPlayerIndex];
         this.addLog(`👤 ${player.name} берёт управление`);
 
         this.updateUI();
+    },
+
+    /**
+     * Применение постоянных эффектов в начале хода
+     * Для дефектов и сбоев с триггером "всегда"
+     */
+    applyPermanentEffects() {
+        // Проверяем активные дефекты
+        this.state.activeDefects.forEach(defect => {
+            if (defect.diceLoss === 'всегда') {
+                this.applyPermanentEffect(defect, 'defect');
+            }
+        });
+
+        // Проверяем активные сбои
+        this.state.activeCrashes.forEach(crash => {
+            if (crash.diceLoss === 'всегда') {
+                this.applyPermanentEffect(crash, 'crash');
+            }
+        });
+    },
+
+    /**
+     * Применить постоянный эффект карты
+     */
+    applyPermanentEffect(card, type) {
+        const loss = card.loss;
+
+        if (loss.includes('ОД')) {
+            const amount = CardsManager.parseNumber(loss);
+            this.state.actionPoints = Math.max(0, this.state.actionPoints - amount);
+            this.addLog(`⚠️ "${card.header}": ${loss} (постоянный эффект)`, 'warning');
+        } else if (loss.includes('ОМ')) {
+            const amount = CardsManager.parseNumber(loss);
+            this.state.missionPoints -= amount;
+            this.addLog(`⚠️ "${card.header}": ${loss} (постоянный эффект)`, 'danger');
+        }
+        // Специальные эффекты типа "Ход без прибыли" обрабатываются в checkDefects
     },
 
     /**
@@ -751,19 +809,23 @@ const Game = {
             ...this.state.activeCrashes.map(c => c.id)
         ];
 
+        // Очищаем доступные джокеры с прошлого хода
+        this.state.availableJokers = [];
+
         // На 10-м ходу - ТОЛЬКО джокеры (вместо дефектов и улучшений)
         if (this.state.currentTurn === 10 && !this.state.jokersGiven) {
             // Очищаем доступные фичи
             this.state.availableFeatures = [];
 
-            // Выдаём 3 джокера
-            this.addLog(`🎰 Особый ход! Джокеры вместо улучшений!`, 'success');
+            // Предлагаем 3 джокера для выбора
+            this.addLog(`🎰 Особый ход! Выберите джокеры!`, 'success');
+            const tempUsedIds = [...this.state.usedJokerIds];
             for (let i = 0; i < 3; i++) {
-                const joker = CardsManager.getRandomJoker(this.state.usedJokerIds);
+                const joker = CardsManager.getRandomJoker(tempUsedIds);
                 if (joker) {
-                    this.state.playerJokers.push(joker);
-                    this.state.usedJokerIds.push(joker.id);
-                    this.addLog(`🌟 Джокер: "${joker.header}"`, 'success');
+                    this.state.availableJokers.push(joker);
+                    tempUsedIds.push(joker.id); // Исключаем из следующего выбора
+                    this.addLog(`🃏 Доступен джокер: "${joker.header}"`, 'success');
                 }
             }
             this.state.jokersGiven = true;
@@ -863,10 +925,24 @@ const Game = {
                 btn.disabled = !canInstall;
                 btn.addEventListener('click', () => this.installFeature(card));
                 this.elements.modalActions.appendChild(btn);
-            } else if (type === 'joker') {
+            } else if (type === 'available-joker') {
+                // Джокер доступен для взятия на руку
+                const takeCost = 1; // Взять джокер стоит 1 ОД
+                const canTake = this.state.actionPoints >= takeCost;
                 const btn = document.createElement('button');
                 btn.className = 'btn-action joker-action';
-                btn.textContent = '★ Использовать';
+                btn.textContent = `🃏 Взять на руку (${takeCost} ОД)`;
+                btn.disabled = !canTake;
+                btn.addEventListener('click', () => this.takeJoker(card));
+                this.elements.modalActions.appendChild(btn);
+            } else if (type === 'joker') {
+                // Джокер на руках - можно использовать
+                const jokerCost = CardsManager.parseNumber(card.cost);
+                const canUse = this.state.actionPoints >= jokerCost;
+                const btn = document.createElement('button');
+                btn.className = 'btn-action joker-action';
+                btn.textContent = `★ Использовать (${card.cost})`;
+                btn.disabled = !canUse;
                 btn.addEventListener('click', () => this.useJoker(card));
                 this.elements.modalActions.appendChild(btn);
             }
@@ -1016,12 +1092,49 @@ const Game = {
     },
 
     /**
+     * Взять джокер на руку
+     */
+    takeJoker(joker) {
+        const cost = 1; // Взять джокер стоит 1 ОД
+
+        if (this.state.actionPoints < cost) {
+            this.addLog(`❌ Недостаточно ОД для взятия джокера`, 'warning');
+            return;
+        }
+
+        // Списываем ОД
+        this.state.actionPoints -= cost;
+
+        // Убираем из доступных
+        this.state.availableJokers = this.state.availableJokers.filter(j => j.id !== joker.id);
+
+        // Добавляем на руку
+        this.state.playerJokers.push(joker);
+        this.state.usedJokerIds.push(joker.id);
+
+        this.addLog(`🃏 Джокер "${joker.header}" взят на руку (-${cost} ОД)`, 'success');
+        this.closeModal();
+        this.updateUI();
+    },
+
+    /**
      * Использовать джокер
      */
     useJoker(joker) {
+        const cost = CardsManager.parseNumber(joker.cost);
+
+        // Проверяем, хватает ли ОД
+        if (this.state.actionPoints < cost) {
+            this.addLog(`❌ Недостаточно ОД для джокера (нужно ${cost})`, 'warning');
+            return;
+        }
+
+        // Списываем ОД
+        this.state.actionPoints -= cost;
+
         this.state.playerJokers = this.state.playerJokers.filter(j => j.id !== joker.id);
         this.state.usedJokerIds.push(joker.id);
-        this.addLog(`🌟 Джокер "${joker.header}" использован!`, 'success');
+        this.addLog(`🌟 Джокер "${joker.header}" использован! (-${cost} ОД)`, 'success');
         this.closeModal();
         this.updateUI();
     },

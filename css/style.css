@@ -1355,9 +1355,39 @@ body {
     color: #ffd700;
 }
 
+/* Доступные для взятия джокеры */
+.mini-card.available-joker {
+    border: 2px dashed #ffd700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--bg-secondary));
+    animation: joker-pulse 1.5s ease-in-out infinite;
+}
+
+.mini-card.available-joker:hover {
+    border-style: solid;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.mini-card.available-joker .mini-card-type {
+    color: #ffd700;
+}
+
+.mini-card.available-joker .mini-card-type::after {
+    content: ' (взять)';
+    font-size: 0.7em;
+}
+
+@keyframes joker-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
 /* === УРОВНИ КРИТИЧНОСТИ МИНИ-КАРТОЧЕК === */
-.mini-card.level-easy {
-    border-left: 3px solid #4ade80;
+/* Уровни критичности - повышенная специфичность для перекрытия стилей типов */
+.mini-card.level-easy,
+.mini-card.available.level-easy,
+.mini-card.feature.level-easy,
+.mini-card.upgrade.level-easy {
+    border-left: 3px solid #4ade80 !important;
     background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), var(--bg-secondary));
 }
 
@@ -1365,8 +1395,11 @@ body {
     color: #4ade80;
 }
 
-.mini-card.level-medium {
-    border-left: 3px solid #facc15;
+.mini-card.level-medium,
+.mini-card.available.level-medium,
+.mini-card.feature.level-medium,
+.mini-card.upgrade.level-medium {
+    border-left: 3px solid #facc15 !important;
     background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), var(--bg-secondary));
 }
 
@@ -1374,8 +1407,11 @@ body {
     color: #facc15;
 }
 
-.mini-card.level-hard {
-    border-left: 3px solid #fb923c;
+.mini-card.level-hard,
+.mini-card.available.level-hard,
+.mini-card.feature.level-hard,
+.mini-card.upgrade.level-hard {
+    border-left: 3px solid #fb923c !important;
     background: linear-gradient(135deg, rgba(251, 146, 60, 0.1), var(--bg-secondary));
 }
 
@@ -1383,8 +1419,11 @@ body {
     color: #fb923c;
 }
 
-.mini-card.level-extreme {
-    border-left: 3px solid #f87171;
+.mini-card.level-extreme,
+.mini-card.available.level-extreme,
+.mini-card.feature.level-extreme,
+.mini-card.upgrade.level-extreme {
+    border-left: 3px solid #f87171 !important;
     background: linear-gradient(135deg, rgba(248, 113, 113, 0.15), var(--bg-secondary));
 }
 
@@ -1392,8 +1431,11 @@ body {
     color: #f87171;
 }
 
-.mini-card.level-special {
-    border-left: 3px solid #c084fc;
+.mini-card.level-special,
+.mini-card.available.level-special,
+.mini-card.feature.level-special,
+.mini-card.upgrade.level-special {
+    border-left: 3px solid #c084fc !important;
     background: linear-gradient(135deg, rgba(192, 132, 252, 0.1), var(--bg-secondary));
 }
 
@@ -1401,8 +1443,9 @@ body {
     color: #c084fc;
 }
 
-.mini-card.level-joker {
-    border-left: 3px solid #ffd700;
+.mini-card.level-joker,
+.mini-card.joker.level-joker {
+    border-left: 3px solid #ffd700 !important;
     background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--bg-secondary));
 }
 

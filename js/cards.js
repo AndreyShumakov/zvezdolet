@@ -275,11 +275,14 @@ const CardsManager = {
     getLevelFromTemplate(template) {
         if (!template) return 'normal';
 
-        // Дефекты и сбои
+        // ВАЖНО: проверяем UNSTABLE до STABLE, т.к. "UNSTABLE" содержит "STABLE"
+        // Аналогично RISKY проверяем раньше
+        if (template.includes('UNSTABLE')) return 'hard';
+        if (template.includes('RISKY')) return 'extreme';
+        if (template.includes('EXTREME')) return 'extreme';
+        if (template.includes('HARD')) return 'hard';
         if (template.includes('EASY') || template.includes('STABLE')) return 'easy';
         if (template.includes('MEDIUM') || template.includes('NORMAL')) return 'medium';
-        if (template.includes('HARD') || template.includes('UNSTABLE')) return 'hard';
-        if (template.includes('EXTREME') || template.includes('RISKY')) return 'extreme';
         if (template.includes('SPECIAL')) return 'special';
         if (template.includes('JOKER')) return 'joker';
 
