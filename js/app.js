@@ -27,7 +27,9 @@ const Game = {
         isGameOver: false,
         triggeredEvents: [],
         noProfitThisTurn: false,   // Флаг "Ход без прибыли"
-        skipNextTurn: false        // Флаг "Пропуск хода"
+        skipNextTurn: false,       // Флаг "Пропуск хода"
+        j02Used: false,            // J02 использован в этом ходу
+        j05Used: false             // J05 использован в этом ходу
     },
 
     // DOM элементы
@@ -92,6 +94,7 @@ const Game = {
             diceCube1: document.querySelector('#dice-1 .dice-cube'),
             diceCube2: document.querySelector('#dice-2 .dice-cube'),
             diceTotal: document.getElementById('dice-total'),
+            jokerActions: document.getElementById('joker-actions'),
             rollDiceBtn: document.getElementById('roll-dice'),
             currentPlayerName: document.getElementById('current-player-name'),
             endTurnBtn: document.getElementById('end-turn'),
@@ -330,6 +333,47 @@ const Game = {
         }
 
         this.renderCards();
+        this.renderJokerActions();
+    },
+
+    /**
+     * Рендер кнопок интерактивных джокеров (J02, J05)
+     */
+    renderJokerActions() {
+        if (!this.elements.jokerActions) return;
+        this.elements.jokerActions.innerHTML = '';
+
+        // Показываем только в фазе results
+        if (this.state.currentPhase !== 'results') return;
+
+        // J02 - Модуль квантовой удачи (перебросить кубик)
+        if (this.canUseJ02()) {
+            const btn1 = document.createElement('button');
+            btn1.className = 'btn-joker-action';
+            btn1.innerHTML = `🃏 Перебросить кубик 1 (${this.state.diceRoll[0]})`;
+            btn1.addEventListener('click', () => this.useJ02RerollDice(0));
+            this.elements.jokerActions.appendChild(btn1);
+
+            const btn2 = document.createElement('button');
+            btn2.className = 'btn-joker-action';
+            btn2.innerHTML = `🃏 Перебросить кубик 2 (${this.state.diceRoll[1]})`;
+            btn2.addEventListener('click', () => this.useJ02RerollDice(1));
+            this.elements.jokerActions.appendChild(btn2);
+        }
+
+        // J05 - Система Мёбиус (убрать дефект)
+        if (this.canUseJ05()) {
+            const availableDefects = this.getJ05AvailableDefects();
+            if (availableDefects.length > 0) {
+                availableDefects.forEach(defect => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-joker-action';
+                    btn.innerHTML = `🃏 Убрать "${defect.header}"`;
+                    btn.addEventListener('click', () => this.useJ05RemoveDefect(defect));
+                    this.elements.jokerActions.appendChild(btn);
+                });
+            }
+        }
     },
 
     /**
@@ -470,6 +514,7 @@ const Game = {
             this.checkDefects(total);
             this.checkCrashes(total);
             this.checkFeatures(total, isDubble);
+            this.checkJokers(total, isDubble); // Постоянные эффекты джокеров
 
             this.showTriggeredEvents();
 
@@ -592,6 +637,135 @@ const Game = {
     },
 
     /**
+     * Проверка эффектов джокеров на руках
+     */
+    checkJokers(diceSum, isDubble) {
+        // Считаем количество сработавших улучшений для J04
+        const profitCount = this.state.triggeredEvents.filter(e => e.type === 'profit').length;
+
+        this.state.playerJokers.forEach(joker => {
+            switch (joker.id) {
+                case 'J01': // ИИ приоритизация: +1 ОД при диапазоне 1-6,8-12
+                    if (CardsManager.checkDiceRange(joker.diceProfit, diceSum)) {
+                        this.state.triggeredEvents.push({
+                            type: 'joker_bonus',
+                            name: joker.header,
+                            message: '+1 ОД',
+                            pointsChange: 0,
+                            actionPointsChange: +1
+                        });
+                    }
+                    break;
+
+                case 'J04': // Реактор-резонатор: +1 ОМ за каждое сработавшее улучшение
+                    if (profitCount > 0 && CardsManager.checkDiceRange(joker.diceProfit, diceSum)) {
+                        this.state.triggeredEvents.push({
+                            type: 'joker_bonus',
+                            name: joker.header,
+                            message: `+${profitCount} ОМ (за ${profitCount} улучш.)`,
+                            pointsChange: +profitCount
+                        });
+                    }
+                    break;
+            }
+        });
+    },
+
+    /**
+     * Проверка есть ли джокер J03 на руках (бонус при починке)
+     */
+    hasJokerJ03Bonus(diceSum) {
+        const j03 = this.state.playerJokers.find(j => j.id === 'J03');
+        if (!j03) return false;
+        // J03: diceProfit = "2-5,7-11"
+        return CardsManager.checkDiceRange(j03.diceProfit, diceSum);
+    },
+
+    /**
+     * Проверка доступности J02 (перебросить кубик)
+     */
+    canUseJ02() {
+        if (this.state.j02Used) return false;
+        const j02 = this.state.playerJokers.find(j => j.id === 'J02');
+        if (!j02) return false;
+        // J02 работает при "не дубль"
+        const isDubble = this.state.diceRoll[0] === this.state.diceRoll[1];
+        return !isDubble && this.state.diceRoll[0] > 0;
+    },
+
+    /**
+     * Использовать J02 - перебросить один кубик
+     */
+    useJ02RerollDice(diceIndex) {
+        if (!this.canUseJ02()) return;
+
+        this.state.j02Used = true;
+        const oldValue = this.state.diceRoll[diceIndex];
+        const newValue = Math.floor(Math.random() * 6) + 1;
+        this.state.diceRoll[diceIndex] = newValue;
+
+        // Обновляем визуал кубика
+        const diceCube = diceIndex === 0 ? this.elements.diceCube1 : this.elements.diceCube2;
+        diceCube.classList.add('rolling');
+
+        setTimeout(() => {
+            diceCube.classList.remove('rolling');
+            diceCube.setAttribute('data-value', newValue);
+
+            const total = this.state.diceRoll[0] + this.state.diceRoll[1];
+            const isDubble = this.state.diceRoll[0] === this.state.diceRoll[1];
+
+            this.elements.diceTotal.innerHTML = `<span>${total}</span>`;
+            this.addLog(`🃏 Модуль квантовой удачи: кубик ${diceIndex + 1} переброшен (${oldValue} → ${newValue})`, 'success');
+
+            // Пересчитываем события
+            this.state.triggeredEvents = [];
+            this.checkDefects(total);
+            this.checkCrashes(total);
+            this.checkFeatures(total, isDubble);
+            this.checkJokers(total, isDubble);
+
+            this.showTriggeredEvents();
+            this.updateUI();
+        }, 500);
+    },
+
+    /**
+     * Проверка доступности J05 (убрать дефект)
+     */
+    canUseJ05() {
+        if (this.state.j05Used) return false;
+        const j05 = this.state.playerJokers.find(j => j.id === 'J05');
+        if (!j05) return false;
+        // J05 работает при чётном броске
+        const total = this.state.diceRoll[0] + this.state.diceRoll[1];
+        return total % 2 === 0 && total > 0;
+    },
+
+    /**
+     * Получить доступные дефекты для J05 (только EASY и MEDIUM)
+     */
+    getJ05AvailableDefects() {
+        return this.state.activeDefects.filter(d => {
+            const template = d.template || '';
+            return template.includes('EASY') || template.includes('MEDIUM');
+        });
+    },
+
+    /**
+     * Использовать J05 - убрать лёгкий/средний дефект
+     */
+    useJ05RemoveDefect(defect) {
+        if (!this.canUseJ05()) return;
+
+        this.state.j05Used = true;
+        this.state.activeDefects = this.state.activeDefects.filter(d => d.id !== defect.id);
+        this.addLog(`🃏 Система Мёбиус: дефект "${defect.header}" устранён!`, 'success');
+        this.closeModal();
+        this.updateUI();
+    },
+
+    /**
      * Показать события и применить изменения ОМ синхронно
      */
     showTriggeredEvents() {
@@ -650,9 +824,10 @@ const Game = {
                 }
 
                 // Добавляем в лог
-                const logType = event.type === 'profit' ? 'success' :
+                const logType = (event.type === 'profit' || event.type === 'joker_bonus') ? 'success' :
                                (event.type === 'breakdown' || event.type === 'crash') ? 'danger' : 'warning';
                 const logIcon = event.type === 'profit' ? '✨' :
+                               event.type === 'joker_bonus' ? '🃏' :
                                event.type === 'breakdown' ? '💥' :
                                event.type === 'crash' ? '💥' : '⚠️';
                 this.addLog(`${logIcon} "${event.name}": ${event.message}`, logType);
@@ -664,7 +839,9 @@ const Game = {
                 // Показываем уведомление
                 const notification = document.createElement('div');
                 notification.className = `event-notification ${event.type}`;
-                const icon = event.type === 'profit' ? '💰' : event.type === 'breakdown' ? '💥' : '⚠️';
+                const icon = event.type === 'profit' ? '💰' :
+                            event.type === 'joker_bonus' ? '🃏' :
+                            event.type === 'breakdown' ? '💥' : '⚠️';
 
                 // Показываем изменение очков в уведомлении
                 let pointsIndicator = '';
@@ -750,6 +927,8 @@ const Game = {
         this.state.diceRoll = [0, 0];
         this.state.triggeredEvents = [];
         this.state.noProfitThisTurn = false;
+        this.state.j02Used = false;
+        this.state.j05Used = false;
 
         // Применяем постоянные эффекты (дефекты/сбои с "всегда") в начале хода
         this.applyPermanentEffects();
@@ -927,7 +1106,7 @@ const Game = {
                 this.elements.modalActions.appendChild(btn);
             } else if (type === 'available-joker') {
                 // Джокер доступен для взятия на руку
-                const takeCost = 1; // Взять джокер стоит 1 ОД
+                const takeCost = 4; // Взять джокер стоит 4 ОД
                 const canTake = this.state.actionPoints >= takeCost;
                 const btn = document.createElement('button');
                 btn.className = 'btn-action joker-action';
@@ -1029,6 +1208,14 @@ const Game = {
         this.state.actionPoints -= cost;
         this.state.activeDefects = this.state.activeDefects.filter(d => d.id !== defect.id);
         this.addLog(`🔧 Дефект "${defect.header}" устранён`, 'success');
+
+        // J03 бонус: +1 ОД при устранении дефекта (если бросок в диапазоне 2-5,7-11)
+        const diceSum = this.state.diceRoll[0] + this.state.diceRoll[1];
+        if (this.hasJokerJ03Bonus(diceSum)) {
+            this.state.actionPoints += 1;
+            this.addLog(`🃏 Интерфейс боевого духа: +1 ОД за устранение дефекта!`, 'success');
+        }
+
         this.closeModal();
         this.updateUI();
     },
@@ -1095,7 +1282,7 @@ const Game = {
      * Взять джокер на руку
      */
     takeJoker(joker) {
-        const cost = 1; // Взять джокер стоит 1 ОД
+        const cost = 4; // Взять джокер стоит 4 ОД
 
         if (this.state.actionPoints < cost) {
             this.addLog(`❌ Недостаточно ОД для взятия джокера`, 'warning');
@@ -1136,6 +1323,34 @@ const Game = {
         this.state.usedJokerIds.push(joker.id);
         this.addLog(`🌟 Джокер "${joker.header}" использован! (-${cost} ОД)`, 'success');
         this.closeModal();
+        this.updateUI();
+    },
+
+    /**
+     * Удалить случайную фичу (эффект D16 "Отключение защитного экрана")
+     * Если фича сломана, удаляется и связанный сбой
+     */
+    removeRandomFeature() {
+        if (this.state.activeFeatures.length === 0) {
+            this.addLog(`⚡ Защитный экран отключён, но фич нет`, 'warning');
+            return;
+        }
+
+        // Выбираем случайную фичу
+        const randomIndex = Math.floor(Math.random() * this.state.activeFeatures.length);
+        const feature = this.state.activeFeatures[randomIndex];
+
+        // Если фича сломана, удаляем связанный сбой
+        if (feature.isBroken) {
+            const crashId = 'C' + feature.id.substring(1); // F01 -> C01
+            this.state.activeCrashes = this.state.activeCrashes.filter(c => c.id !== crashId);
+            this.addLog(`💥 Сбой "${feature.header}" уничтожен вместе с фичей`, 'danger');
+        }
+
+        // Удаляем фичу
+        this.state.activeFeatures.splice(randomIndex, 1);
+        this.addLog(`☠️ Фича "${feature.header}" уничтожена защитным экраном!`, 'danger');
+
         this.updateUI();
     },
 
