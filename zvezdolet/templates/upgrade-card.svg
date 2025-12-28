@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 420" width="300" height="420">
+  <defs>
+    <!-- Градиенты для разных уровней -->
+    <linearGradient id="reliable-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a4a2a"/>
+      <stop offset="100%" style="stop-color:#0d2a15"/>
+    </linearGradient>
+    <linearGradient id="balanced-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a3a4a"/>
+      <stop offset="100%" style="stop-color:#0d1f2a"/>
+    </linearGradient>
+    <linearGradient id="risky-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a3a1a"/>
+      <stop offset="100%" style="stop-color:#2a200d"/>
+    </linearGradient>
+    <linearGradient id="adventurous-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3a1a4a"/>
+      <stop offset="100%" style="stop-color:#200d2a"/>
+    </linearGradient>
+
+    <!-- Свечение -->
+    <filter id="glow-green">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Звёзды -->
+    <pattern id="stars-upgrade" patternUnits="userSpaceOnUse" width="100" height="100">
+      <circle cx="10" cy="20" r="0.5" fill="#ffffff" opacity="0.3"/>
+      <circle cx="50" cy="10" r="0.8" fill="#ffffff" opacity="0.5"/>
+      <circle cx="80" cy="40" r="0.4" fill="#ffffff" opacity="0.2"/>
+      <circle cx="30" cy="70" r="0.6" fill="#ffffff" opacity="0.4"/>
+      <circle cx="70" cy="80" r="0.5" fill="#ffffff" opacity="0.3"/>
+      <circle cx="90" cy="60" r="0.7" fill="#ffffff" opacity="0.4"/>
+    </pattern>
+  </defs>
+
+  <!-- Фон карточки -->
+  <rect class="card-bg" x="0" y="0" width="300" height="420" rx="15" ry="15" fill="url(#reliable-gradient)"/>
+  <rect x="0" y="0" width="300" height="420" rx="15" ry="15" fill="url(#stars-upgrade)" opacity="0.5"/>
+
+  <!-- Рамка -->
+  <rect class="card-border" x="5" y="5" width="290" height="410" rx="12" ry="12" fill="none" stroke="#4aff9e" stroke-width="2" opacity="0.6"/>
+
+  <!-- Верхняя полоса с типом -->
+  <rect x="10" y="10" width="280" height="35" rx="8" ry="8" fill="#0a1520" opacity="0.8"/>
+  <text class="card-type" x="150" y="33" text-anchor="middle" fill="#4aff9e" font-family="Arial, sans-serif" font-size="14" font-weight="bold" letter-spacing="2">УЛУЧШЕНИЕ</text>
+
+  <!-- ID карточки -->
+  <circle cx="35" cy="27" r="15" fill="#1a2a3a" stroke="#4aff9e" stroke-width="1"/>
+  <text class="card-id" x="35" y="32" text-anchor="middle" fill="#4aff9e" font-family="Arial, sans-serif" font-size="12" font-weight="bold">U1</text>
+
+  <!-- Уровень -->
+  <rect class="level-badge" x="210" y="12" width="80" height="22" rx="4" ry="4" fill="#4aff9e" opacity="0.3"/>
+  <text class="card-level" x="250" y="28" text-anchor="middle" fill="#4aff9e" font-family="Arial, sans-serif" font-size="10" font-weight="bold">НАДЁЖНЫЙ</text>
+
+  <!-- Название карточки -->
+  <rect x="10" y="50" width="280" height="45" rx="5" ry="5" fill="#0a1520" opacity="0.6"/>
+  <text class="card-name" x="150" y="80" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-size="14" font-weight="bold">Антимикробное покрытие</text>
+
+  <!-- Иконка -->
+  <g class="card-icon" transform="translate(115, 100)">
+    <circle cx="35" cy="35" r="30" fill="#1a2a3a" stroke="#4aff9e" stroke-width="2" opacity="0.8"/>
+    <path d="M20 35 L35 20 L50 35 L35 50 Z" fill="none" stroke="#4aff9e" stroke-width="2"/>
+    <path d="M35 25 L35 45 M25 35 L45 35" stroke="#4aff9e" stroke-width="2"/>
+  </g>
+
+  <!-- Описание -->
+  <rect x="10" y="175" width="280" height="55" rx="5" ry="5" fill="#0a1520" opacity="0.5"/>
+  <text class="card-description" x="150" y="195" text-anchor="middle" fill="#aaaaaa" font-family="Arial, sans-serif" font-size="10">
+    <tspan x="150" dy="0">Предотвращает рост микробов,</tspan>
+    <tspan x="150" dy="14">но реагирует с химикатами.</tspan>
+  </text>
+
+  <!-- Стоимость и Прибыль -->
+  <rect x="10" y="235" width="135" height="50" rx="5" ry="5" fill="#1a2a3a" opacity="0.8"/>
+  <text x="77" y="252" text-anchor="middle" fill="#888888" font-family="Arial, sans-serif" font-size="9">УСТАНОВКА</text>
+  <text class="card-cost" x="77" y="272" text-anchor="middle" fill="#ffaa00" font-family="Arial, sans-serif" font-size="16" font-weight="bold" filter="url(#glow-green)">2 ОД</text>
+
+  <rect x="155" y="235" width="135" height="50" rx="5" ry="5" fill="#1a2a3a" opacity="0.8"/>
+  <text x="222" y="252" text-anchor="middle" fill="#888888" font-family="Arial, sans-serif" font-size="9">ПРИБЫЛЬ</text>
+  <text class="card-profit" x="222" y="272" text-anchor="middle" fill="#4aff9e" font-family="Arial, sans-serif" font-size="16" font-weight="bold" filter="url(#glow-green)">+5 ОМ</text>
+
+  <!-- Диапазон прибыли -->
+  <rect x="10" y="290" width="135" height="45" rx="5" ry="5" fill="#152a1a" opacity="0.8"/>
+  <text x="77" y="305" text-anchor="middle" fill="#888888" font-family="Arial, sans-serif" font-size="9">ПРИБЫЛЬ ПРИ</text>
+  <text class="card-profit-range" x="77" y="323" text-anchor="middle" fill="#4aff9e" font-family="Arial, sans-serif" font-size="14" font-weight="bold">5-7</text>
+
+  <!-- Диапазон поломки -->
+  <rect x="155" y="290" width="135" height="45" rx="5" ry="5" fill="#2a1515" opacity="0.8"/>
+  <text x="222" y="305" text-anchor="middle" fill="#888888" font-family="Arial, sans-serif" font-size="9">ПОЛОМКА ПРИ</text>
+  <text class="card-breakdown-range" x="222" y="323" text-anchor="middle" fill="#ff6b6b" font-family="Arial, sans-serif" font-size="14" font-weight="bold">3-4</text>
+
+  <!-- Эффект поломки -->
+  <rect x="10" y="340" width="280" height="70" rx="5" ry="5" fill="#2a1515" opacity="0.7"/>
+  <text x="150" y="357" text-anchor="middle" fill="#ff6b6b" font-family="Arial, sans-serif" font-size="9" font-weight="bold">ЭФФЕКТ ПОЛОМКИ</text>
+  <text class="card-breakdown-effect" x="150" y="375" text-anchor="middle" fill="#ffaaaa" font-family="Arial, sans-serif" font-size="11">
+    <tspan x="150" dy="0">−2 ОМ (токсичная реакция)</tspan>
+  </text>
+  <text x="150" y="400" text-anchor="middle" fill="#888888" font-family="Arial, sans-serif" font-size="9">
+    <tspan>Ремонт: </tspan><tspan class="card-breakdown-cost" fill="#ffaa00">2 ОД</tspan>
+  </text>
+</svg>

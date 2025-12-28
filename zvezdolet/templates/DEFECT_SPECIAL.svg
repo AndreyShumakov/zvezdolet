@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 265" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <bx:export>
+      <bx:file format="svg"/>
+    </bx:export>
+    <style bx:fonts="Roboto Mono">@import url(https://fonts.googleapis.com/css2?family=Roboto+Mono%3Aital%2Cwght%400%2C100..700%3B1%2C100..700&amp;display=swap);</style>
+  </defs>
+  <path style="stroke: rgb(194, 216, 251); fill-opacity: 0.4;" d="M 0.5 0.5 L 0.5 30.5 L 9.45 38.5 L 22.378 38.5 L 31.328 33.5 L 37.294 24.5 L 142.706 24.5 L 147.678 33.5 L 157.622 38.5 L 170.55 38.5 L 179.5 30.5 L 179.5 0.5 L 0.5 0.5 Z"/>
+  <g transform="matrix(1, 0, 0, 1, -237.733002, 24.364)">
+    <path style="fill: rgb(174, 203, 250); stroke: rgb(24, 100, 171);" d="M 245.283 1.811 L 247.345 -0.006 L 244.774 -5.195 L 245.298 -8.766 L 250.011 -13.717 L 256.152 -15.669 L 260.722 -14.479 L 265.959 -6.005 L 262.817 2.66 L 254.724 5.04 L 251.248 4.278 L 248.44 1.708 L 246.726 3.469 L 249.535 5.802 L 254.2 7.42 L 264.531 4.469 L 268.244 -6.148 L 262.484 -16.097 L 255.819 -17.526 L 248.821 -15.574 L 243.536 -9.432 L 242.298 -3.529 L 245.283 1.811 Z"/>
+    <path style="fill: rgb(174, 203, 250); stroke: rgb(24, 100, 171);" d="M 242.937 -15.613 L 251.19 -7.016 L 241.733 -6.93 L 250.158 -4.007 L 242.507 1.409 L 250.674 -1.256 L 248.009 8.028 L 255.402 -1.6 L 258.497 7.169 L 258.497 -2.546 L 270.103 0.463 L 259.873 -6.414 L 266.063 -17.762 L 257.122 -8.993 L 254.199 -18.364 L 251.877 -10.283 L 242.937 -15.613 Z"/>
+  </g>
+  <g stroke-linecap="round" transform="matrix(1, 0, 0, 1, 277.822449, -43.536392)"/>
+  <rect x="7" y="45" width="166" height="105" style="stroke: rgb(194, 216, 251); fill-opacity: 0.6;" rx="6" ry="6"/>
+  <text style="fill: rgb(102, 157, 246); font-family: &quot;Roboto Mono&quot;; font-size: 12px; white-space: pre;" transform="matrix(1, 0, 0, 1, -3.942993, -2.654978)"><tspan x="15.412" y="63.315" style="font-size: 13px;">%header_1%</tspan><tspan x="15.412" dy="1em" style="font-size: 13px;">%header_2%</tspan><tspan x="15.412" dy="1.5em" style="font-size: 10px;">%text_01%</tspan><tspan x="15.412" dy="1em" style="font-size: 10px;">%text_02%</tspan><tspan x="15.412" dy="1em" style="font-size: 10px;">%text_03%</tspan><tspan x="15.412" dy="1em" style="font-size: 10px;">%text_04%</tspan><tspan x="15.412" dy="1em" style="font-size: 10px;">%text_05%</tspan><tspan x="15.412" dy="1em" style="font-size: 10px;">%text_06%</tspan><tspan x="15.412" dy="1em"/></text>
+  <rect x="7" y="155" width="166" height="30" style="fill-opacity: 0.6; stroke: rgb(194, 216, 251);" rx="4" ry="4"/>
+  <rect x="7" y="190" width="166" height="30" style="fill-opacity: 0.6; stroke: rgb(194, 216, 251); stroke-width: 1;" rx="4" ry="4"/>
+  <path style="stroke: rgb(230, 73, 128); fill: rgb(252, 194, 215); stroke-linecap: round; stroke-linejoin: round;" d="M 16.217 195.307 L 10.376 204.291 L 20.73 204.291 L 26.483 195.307 L 16.217 195.307 Z"/>
+  <path style="stroke: rgb(230, 73, 128); fill: rgb(247, 131, 172); stroke-linecap: round; stroke-linejoin: round;" d="M 10.68 205.83 L 20.691 205.83 L 26.572 214.138 L 15.862 214.049 L 10.68 205.83 Z"/>
+  <path style="stroke: rgb(194, 37, 92); fill: rgb(230, 73, 128); stroke-linecap: round; stroke-linejoin: round;" d="M 22.197 204.966 L 27.93 213.401 L 33.173 204.749 L 27.984 195.675 L 22.197 204.966 Z"/>
+  <text style="fill: rgb(102, 157, 246); font-family: &quot;Roboto Mono&quot;; font-size: 12px; white-space: pre;" x="35" y="174.422">%COST%</text>
+  <text style="fill: rgb(102, 157, 246); font-family: &quot;Roboto Mono&quot;; font-size: 12px; white-space: pre;" x="35" y="208.725">%DIECE_LOSS%</text>
+  <text style="fill: rgb(102, 157, 246); font-family: &quot;Roboto Mono&quot;; font-size: 19px; text-anchor: middle; white-space: pre;" x="90" y="19.497">ДЕФЕКТ</text>
+  <ellipse style="stroke: rgb(24, 100, 171); fill: rgb(174, 203, 250);" cx="161.339" cy="18.583" rx="15" ry="15"/>
+  <ellipse style="stroke: rgb(24, 100, 171); fill: rgb(243, 66, 61);" cx="161.504" cy="18.651" rx="13" ry="13"/>
+  <path style="stroke-linecap: round; stroke-linejoin: round; fill: rgb(253, 253, 253); stroke: rgb(24, 100, 171);" d="M 152.847 15.455 C 152.257 15.389 152.796 12.065 153.386 12.131 C 153.143 11.402 155.475 9.839 155.62 10.273 C 157.014 9.678 156.849 11.724 156.867 11.68 C 156.885 11.636 155.894 13.628 155.217 13.712 C 154.76 13.986 152.678 15.557 152.847 15.455 Z"/>
+  <g transform="matrix(1, 0, 0, 1, -215.464462, 13.77204)">
+    <path style="stroke: rgb(24, 100, 171); fill: rgb(174, 203, 250); stroke-linecap: round; stroke-linejoin: round; stroke-width: 0.629;" d="M 234.687 156.566 L 236.698 157.077 L 238.824 154.975 L 238.135 152.76 L 234.687 156.566 Z"/>
+    <path style="stroke: rgb(102, 157, 246); fill: rgb(174, 203, 250); stroke-linecap: round; stroke-linejoin: round; stroke-width: 0.629;" d="M 227.332 159.461 L 228.194 162.641 L 231.412 159.632 L 233.365 160.37 L 236.353 157.417 L 231.24 155.884 L 227.332 159.461 Z"/>
+    <path style="stroke: rgb(24, 100, 171); fill: rgb(102, 157, 246); stroke-linecap: round; stroke-linejoin: round; stroke-width: 0.629;" d="M 231.067 164.873 L 234.285 165.612 L 237.904 162.148 L 236.468 157.321 L 233.25 160.444 L 233.825 162.091 L 231.067 164.873 Z"/>
+    <path style="stroke: rgb(24, 100, 171); fill: rgb(102, 157, 246); stroke-linecap: round; stroke-linejoin: round; stroke-width: 0.629;" d="M 239.031 154.805 L 236.526 157.311 L 237.05 159.234 L 240.663 155.558 L 239.031 154.805 Z"/>
+    <path style="stroke-linecap: round; stroke-linejoin: round; stroke-width: 0.6px; stroke: rgb(102, 157, 246); fill: rgb(174, 203, 250);" d="M 237.464 149.948 L 238.919 154.836 L 241.8 151.991 L 241.382 150.232 L 244.23 147.282 L 241.1 146.474 L 237.464 149.948 Z"/>
+    <path style="stroke-linecap: round; stroke-linejoin: round; stroke-width: 0.6px; fill: rgb(102, 157, 246); stroke: rgb(24, 100, 171);" d="M 238.922 154.94 L 241.77 152.052 L 243.749 152.739 L 247.02 149.851 L 247.869 152.961 C 247.869 152.961 243.93 156.495 243.93 156.455 C 243.93 156.415 238.922 155.021 238.922 154.94 Z"/>
+  </g>
+  <rect x="7" y="225" width="166" height="30" style="fill-opacity: 0.6; stroke: rgb(194, 216, 251); stroke-width: 1;" rx="4" ry="4"/>
+  <path style="stroke: rgb(102, 157, 246); fill: none; stroke-linecap: round; stroke-linejoin: round;" d="M 11.2 240.26 L 15.715 231.684 L 18.238 235.57 L 15.76 240.036 L 18.549 244.235 L 16.424 248.166 L 11.2 240.26 Z"/>
+  <path style="stroke: rgb(102, 157, 246); fill: none; stroke-linecap: round; stroke-linejoin: round;" d="M 17.973 249.014 L 19.965 245.039 L 25.057 244.726 L 27.359 240.17 L 32.095 239.902 L 27.58 248.701 L 17.973 249.014 Z"/>
+  <path style="stroke: rgb(102, 157, 246); fill: none; stroke-linecap: round; stroke-linejoin: round;" d="M 17.044 231.014 L 19.522 234.9 L 24.569 234.498 L 27.403 238.964 L 32.272 238.652 L 26.783 230.433 L 17.044 231.014 Z"/>
+  <path style="stroke: rgb(24, 100, 171); fill: rgb(102, 157, 246); stroke-linecap: round; stroke-linecap: round; stroke-linejoin: round;" d="M 19.301 236.553 L 17.441 240.17 L 18.238 241.332 L 24.525 237.133 L 23.728 236.061 L 19.301 236.553 Z"/>
+  <path style="stroke: rgb(24, 100, 171); fill: rgb(102, 157, 246); stroke-linecap: round; stroke-linejoin: round;" d="M 18.991 242.359 L 19.877 243.61 L 24.127 243.387 C 24.127 243.387 26.075 239.501 26.075 239.456 C 26.075 239.411 25.366 238.205 25.366 238.205 L 18.991 242.359 Z"/>
+  <text style="fill: rgb(102, 157, 246); font-family: &quot;Roboto Mono&quot;; font-size: 12px; white-space: pre; stroke-width: 1;" x="35" y="243.725">%LOSS%</text>
+</svg>

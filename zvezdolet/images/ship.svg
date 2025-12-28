@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <defs>
+    <!-- Градиент для корпуса -->
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4a5568"/>
+      <stop offset="50%" style="stop-color:#718096"/>
+      <stop offset="100%" style="stop-color:#4a5568"/>
+    </linearGradient>
+    
+    <!-- Градиент для носа -->
+    <linearGradient id="noseGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#718096"/>
+      <stop offset="100%" style="stop-color:#e53e3e"/>
+    </linearGradient>
+    
+    <!-- Градиент для окна -->
+    <radialGradient id="windowGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#90cdf4"/>
+      <stop offset="70%" style="stop-color:#3182ce"/>
+      <stop offset="100%" style="stop-color:#1a365d"/>
+    </radialGradient>
+    
+    <!-- Градиент для пламени -->
+    <linearGradient id="flameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f6e05e"/>
+      <stop offset="50%" style="stop-color:#ed8936"/>
+      <stop offset="100%" style="stop-color:#e53e3e"/>
+    </linearGradient>
+    
+    <!-- Внутреннее пламя -->
+    <linearGradient id="innerFlameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff"/>
+      <stop offset="50%" style="stop-color:#faf089"/>
+      <stop offset="100%" style="stop-color:#ed8936"/>
+    </linearGradient>
+    
+    <!-- Свечение -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Левое крыло -->
+  <path d="M 120 280 L 60 380 L 80 380 L 160 310 Z" fill="#2d3748" stroke="#4a5568" stroke-width="2"/>
+  <path d="M 75 370 L 60 380 L 80 380 L 90 370 Z" fill="#e53e3e"/>
+  
+  <!-- Правое крыло -->
+  <path d="M 280 280 L 340 380 L 320 380 L 240 310 Z" fill="#2d3748" stroke="#4a5568" stroke-width="2"/>
+  <path d="M 325 370 L 340 380 L 320 380 L 310 370 Z" fill="#e53e3e"/>
+  
+  <!-- Основной корпус -->
+  <path d="M 200 50 
+           C 140 120, 140 200, 150 320 
+           L 150 360 L 250 360 L 250 320
+           C 260 200, 260 120, 200 50" 
+        fill="url(#bodyGradient)" stroke="#2d3748" stroke-width="2"/>
+  
+  <!-- Декоративные полосы -->
+  <path d="M 155 200 L 245 200" stroke="#e53e3e" stroke-width="8"/>
+  <path d="M 155 220 L 245 220" stroke="#2d3748" stroke-width="3"/>
+  
+  <!-- Окно -->
+  <circle cx="200" cy="150" r="30" fill="url(#windowGradient)" stroke="#2d3748" stroke-width="3"/>
+  <ellipse cx="190" cy="140" rx="8" ry="12" fill="#fff" opacity="0.3"/>
+  
+  <!-- Двигатели -->
+  <rect x="160" y="350" width="25" height="30" rx="3" fill="#2d3748" stroke="#1a202c" stroke-width="2"/>
+  <rect x="215" y="350" width="25" height="30" rx="3" fill="#2d3748" stroke="#1a202c" stroke-width="2"/>
+  
+  <!-- Пламя левого двигателя -->
+  <path d="M 172 380 Q 165 420, 172 460 Q 172 430, 180 460 Q 180 420, 172 380" 
+        fill="url(#flameGradient)" filter="url(#glow)">
+    <animate attributeName="d" 
+             values="M 172 380 Q 165 420, 172 460 Q 172 430, 180 460 Q 180 420, 172 380;
+                     M 172 380 Q 162 425, 172 470 Q 172 435, 183 470 Q 183 425, 172 380;
+                     M 172 380 Q 165 420, 172 460 Q 172 430, 180 460 Q 180 420, 172 380"
+             dur="0.3s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 172 380 Q 168 410, 172 440 Q 172 420, 177 440 Q 177 410, 172 380" 
+        fill="url(#innerFlameGradient)">
+    <animate attributeName="d" 
+             values="M 172 380 Q 168 410, 172 440 Q 172 420, 177 440 Q 177 410, 172 380;
+                     M 172 380 Q 166 415, 172 450 Q 172 425, 179 450 Q 179 415, 172 380;
+                     M 172 380 Q 168 410, 172 440 Q 172 420, 177 440 Q 177 410, 172 380"
+             dur="0.3s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Пламя правого двигателя -->
+  <path d="M 228 380 Q 221 420, 228 460 Q 228 430, 236 460 Q 236 420, 228 380" 
+        fill="url(#flameGradient)" filter="url(#glow)">
+    <animate attributeName="d" 
+             values="M 228 380 Q 221 420, 228 460 Q 228 430, 236 460 Q 236 420, 228 380;
+                     M 228 380 Q 218 425, 228 470 Q 228 435, 239 470 Q 239 425, 228 380;
+                     M 228 380 Q 221 420, 228 460 Q 228 430, 236 460 Q 236 420, 228 380"
+             dur="0.3s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 228 380 Q 224 410, 228 440 Q 228 420, 233 440 Q 233 410, 228 380" 
+        fill="url(#innerFlameGradient)">
+    <animate attributeName="d" 
+             values="M 228 380 Q 224 410, 228 440 Q 228 420, 233 440 Q 233 410, 228 380;
+                     M 228 380 Q 222 415, 228 450 Q 228 425, 235 450 Q 235 415, 228 380;
+                     M 228 380 Q 224 410, 228 440 Q 228 420, 233 440 Q 233 410, 228 380"
+             dur="0.3s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Заклёпки/детали -->
+  <circle cx="165" cy="260" r="3" fill="#1a202c"/>
+  <circle cx="235" cy="260" r="3" fill="#1a202c"/>
+  <circle cx="165" cy="290" r="3" fill="#1a202c"/>
+  <circle cx="235" cy="290" r="3" fill="#1a202c"/>
+  <circle cx="165" cy="320" r="3" fill="#1a202c"/>
+  <circle cx="235" cy="320" r="3" fill="#1a202c"/>
+</svg>
